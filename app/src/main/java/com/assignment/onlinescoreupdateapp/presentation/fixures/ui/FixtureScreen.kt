@@ -58,9 +58,18 @@ fun FixtureScreen(
             )
         })
     { innerPadding ->
-        val fixtureList = remember { mutableStateOf<List<FixtureInfoItem>?>(null) }
-        fixtureList.value = fixtureState.value.data
+        val query = remember { mutableStateOf("") }
 
+        val filteredItems = remember(query.value, fixtureState.value.data) {
+            if (query.value.isBlank()) {
+                fixtureState.value.data
+            } else {
+                fixtureState.value.data?.filter { item ->
+                    item.firstTeam.name.contains(query.value, ignoreCase = true) ||
+                            item.secondTeam.name.contains(query.value, ignoreCase = true)
+                }
+            }
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -68,20 +77,13 @@ fun FixtureScreen(
                 .padding(10.dp)
         ) {
             FixtureSearchField { searchQuery ->
-                if (searchQuery.isBlank()) {
-                    fixtureList.value = fixtureState.value.data
-                } else {
-                    fixtureList.value = fixtureState.value.data?.filter {
-                        it.firstTeam.name.contains(searchQuery, ignoreCase = true) ||
-                                it.secondTeam.name.contains(searchQuery, ignoreCase = true)
-                    }
-                }
+                query.value = searchQuery
             }
             Spacer(modifier = Modifier.height(20.dp))
             fixtureState.value.apply {
-                if (!isError && !isLoading && fixtureList.value != null) {
+                if (filteredItems != null) {
                     when {
-                        fixtureList.value.isNullOrEmpty() -> {
+                        filteredItems.isEmpty() -> {
                             Text(
                                 text = "No fixtures found",
                                 style = MaterialTheme.typography.bodyLarge,
@@ -91,16 +93,14 @@ fun FixtureScreen(
                         }
 
                         else -> {
-                            fixtureList.value?.let { fixtureList ->
-                                FixtureList(
-                                    fixtureList = fixtureList
-                                ) { fixtureInfo ->
-                                    navController.navigate(
-                                        FixtureDetailsRoute(
-                                            fixtureId = fixtureInfo.id
-                                        )
+                            FixtureList(
+                                fixtureList = filteredItems
+                            ) { fixtureInfo ->
+                                navController.navigate(
+                                    FixtureDetailsRoute(
+                                        fixtureId = fixtureInfo.id
                                     )
-                                }
+                                )
                             }
                         }
                     }
