@@ -25,20 +25,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.assignment.onlinescoreupdateapp.domain.models.fixtures.FixtureInfoItem
 import com.assignment.onlinescoreupdateapp.domain.models.fixtures.FixtureTeam
 import com.assignment.onlinescoreupdateapp.presentation.composables.FixtureList
 import com.assignment.onlinescoreupdateapp.presentation.composables.FixtureSearchField
+import com.assignment.onlinescoreupdateapp.presentation.fixturedetails.routes.FixtureDetailsRoute
 import com.assignment.onlinescoreupdateapp.presentation.fixures.states.FixtureState
+import com.assignment.onlinescoreupdateapp.presentation.fixures.viewmodel.FixtureViewModel
 import com.example.compose.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FixtureScreen(
     navController: NavController,
-    onSearchQueryChanged: (String) -> Unit,
     fixtureState: State<FixtureState>
 ) {
     Scaffold(
@@ -54,6 +57,12 @@ fun FixtureScreen(
             )
         })
     { innerPadding ->
+        val fixtureList =
+            remember {
+                mutableStateOf<List<FixtureInfoItem>>(
+                    fixtureState.value.data ?: emptyList()
+                )
+            }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -61,7 +70,14 @@ fun FixtureScreen(
                 .padding(10.dp)
         ) {
             FixtureSearchField { searchQuery ->
-                onSearchQueryChanged(searchQuery)
+                if (searchQuery.isEmpty()) {
+                    fixtureList.value = fixtureState.value.data ?: emptyList()
+                } else {
+                    fixtureList.value = fixtureState.value.data?.filter {
+                        it.firstTeam.name.contains(searchQuery, ignoreCase = true) ||
+                                it.secondTeam.name.contains(searchQuery, ignoreCase = true)
+                    } ?: emptyList()
+                }
             }
             Spacer(modifier = Modifier.height(20.dp))
             fixtureState.value.apply {
@@ -69,7 +85,7 @@ fun FixtureScreen(
                     when {
                         data.isEmpty() -> {
                             Text(
-                                text = "No employers found",
+                                text = "No fixtures found",
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -78,13 +94,13 @@ fun FixtureScreen(
 
                         else -> {
                             FixtureList(
-                                fixtureList = data
+                                fixtureList = fixtureList.value
                             ) { fixtureInfo ->
-//                                navController.navigate(
-//                                    EmployerDetailsRoute(
-//                                        companyName = employerInfo.companyName
-//                                    )
-//                                )
+                                navController.navigate(
+                                    FixtureDetailsRoute(
+                                        fixtureId = fixtureInfo.id
+                                    )
+                                )
                             }
                         }
                     }
@@ -121,13 +137,24 @@ fun FixtureScreen(
     }
 }
 
+@Composable
+fun FixtureScreenParent(
+    navController: NavController,
+    fixtureViewModel: FixtureViewModel = hiltViewModel()
+) {
+    val fixtureState = fixtureViewModel.fixtureStateFlow.collectAsStateWithLifecycle()
+    FixtureScreen(
+        navController = navController,
+        fixtureState = fixtureState
+    )
+}
+
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun EmployerSearchScreenNightPreview() {
     AppTheme {
         Surface {
             FixtureScreen(
-                onSearchQueryChanged = {},
                 fixtureState = remember {
                     mutableStateOf(
                         FixtureState(
@@ -150,7 +177,6 @@ fun EmployerSearchScreenPreview() {
     AppTheme {
         Surface {
             FixtureScreen(
-                onSearchQueryChanged = {},
                 fixtureState = remember {
                     mutableStateOf(
                         FixtureState(

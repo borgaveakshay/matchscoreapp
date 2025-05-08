@@ -14,7 +14,7 @@ data class Team(
 fun Team.toFixtureTeam(): FixtureTeam {
     return FixtureTeam(
         id = team.id,
-        name = team.name,
+        name = team.shortName,
         score = score
     )
 }

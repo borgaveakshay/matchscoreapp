@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.assignment.onlinescoreupdateapp.domain.models.fixturedetails.FixtureResult
 import com.assignment.onlinescoreupdateapp.domain.models.fixturedetails.MatchEvent
@@ -39,6 +41,7 @@ import com.assignment.onlinescoreupdateapp.domain.models.fixturedetails.TeamScor
 import com.assignment.onlinescoreupdateapp.presentation.composables.MatchInfoBlock
 import com.assignment.onlinescoreupdateapp.presentation.composables.ScoreBlock
 import com.assignment.onlinescoreupdateapp.presentation.composables.TeamLogo
+import com.assignment.onlinescoreupdateapp.presentation.fixturedetails.viewmodel.FixtureDetailsViewModel
 import com.example.compose.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,6 +130,22 @@ fun FixtureDetailsScreen(
     }
     BackHandler {
         navController.popBackStack()
+    }
+}
+
+@Composable
+fun FixtureDetailsParent(
+    navController: NavController,
+    fixtureDetailsViewModel: FixtureDetailsViewModel = hiltViewModel(),
+    fixtureId: Int // We can implement it to fetch particular fixture details
+) {
+    val fixtureDetails =
+        fixtureDetailsViewModel.fixtureDetailsStateFlow.collectAsStateWithLifecycle()
+    fixtureDetails.value.fixtureDetails?.let {
+        FixtureDetailsScreen(
+            navController = navController,
+            match = it
+        )
     }
 }
 

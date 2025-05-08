@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.androidx.compose.navigation)
     implementation(libs.kotlin.serialization)
     implementation(libs.coil.compose)
+    implementation(libs.hilt.navigation)
     kapt(libs.hilt.compiler)
     testImplementation(libs.hilt.testing)
     kaptTest(libs.hilt.compiler)
