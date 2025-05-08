@@ -22,7 +22,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,7 +44,6 @@ import com.example.compose.AppTheme
 fun FixtureScreen(
     navController: NavController,
     fixtureState: State<FixtureState>,
-    onSearchQueryChanged: (String) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -60,11 +58,9 @@ fun FixtureScreen(
             )
         })
     { innerPadding ->
-        val fixtureList =
-            rememberSaveable {
-                mutableStateOf<List<FixtureInfoItem>?>(null)
-            }
+        val fixtureList = remember { mutableStateOf<List<FixtureInfoItem>?>(null) }
         fixtureList.value = fixtureState.value.data
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -72,30 +68,40 @@ fun FixtureScreen(
                 .padding(10.dp)
         ) {
             FixtureSearchField { searchQuery ->
-                onSearchQueryChanged(searchQuery)
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            if (!fixtureList.value.isNullOrEmpty()) {
-                FixtureList(
-                    fixtureList = fixtureList.value!!
-                ) { fixtureInfo ->
-                    navController.navigate(
-                        FixtureDetailsRoute(
-                            fixtureId = fixtureInfo.id
-                        )
-                    )
+                if (searchQuery.isBlank()) {
+                    fixtureList.value = fixtureState.value.data
+                } else {
+                    fixtureList.value = fixtureState.value.data?.filter {
+                        it.firstTeam.name.contains(searchQuery, ignoreCase = true) ||
+                                it.secondTeam.name.contains(searchQuery, ignoreCase = true)
+                    }
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
             fixtureState.value.apply {
-                if (!isError && !isLoading && data != null) {
+                if (!isError && !isLoading && fixtureList.value != null) {
                     when {
-                        data.isEmpty() -> {
+                        fixtureList.value.isNullOrEmpty() -> {
                             Text(
                                 text = "No fixtures found",
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
+                        }
+
+                        else -> {
+                            fixtureList.value?.let { fixtureList ->
+                                FixtureList(
+                                    fixtureList = fixtureList
+                                ) { fixtureInfo ->
+                                    navController.navigate(
+                                        FixtureDetailsRoute(
+                                            fixtureId = fixtureInfo.id
+                                        )
+                                    )
+                                }
+                            }
                         }
                     }
                 } else {
@@ -143,9 +149,7 @@ fun FixtureScreenParent(
     FixtureScreen(
         navController = navController,
         fixtureState = fixtureViewModel.fixtureStateFlow.collectAsStateWithLifecycle()
-    ) { searchQuery ->
-
-    }
+    )
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -164,8 +168,7 @@ fun EmployerSearchScreenNightPreview() {
                         )
                     )
                 },
-                navController = rememberNavController(),
-                onSearchQueryChanged = {}
+                navController = rememberNavController()
             )
         }
     }
@@ -220,8 +223,7 @@ fun EmployerSearchScreenPreview() {
                         )
                     )
                 },
-                navController = rememberNavController(),
-                onSearchQueryChanged = {}
+                navController = rememberNavController()
             )
         }
     }
