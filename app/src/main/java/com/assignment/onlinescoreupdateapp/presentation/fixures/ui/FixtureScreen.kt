@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.assignment.onlinescoreupdateapp.domain.models.fixtures.FixtureInfoItem
 import com.assignment.onlinescoreupdateapp.domain.models.fixtures.FixtureTeam
+import com.assignment.onlinescoreupdateapp.presentation.common.TimeSchedulerManager
 import com.assignment.onlinescoreupdateapp.presentation.composables.FixtureList
 import com.assignment.onlinescoreupdateapp.presentation.composables.FixtureSearchField
 import com.assignment.onlinescoreupdateapp.presentation.fixturedetails.routes.FixtureDetailsRoute
@@ -142,9 +144,16 @@ fun FixtureScreenParent(
     navController: NavController,
     fixtureViewModel: FixtureViewModel = hiltViewModel()
 ) {
-
     LaunchedEffect(key1 = Unit) {
         fixtureViewModel.getFixtures()
+    }
+    DisposableEffect(key1 = Unit) {
+        TimeSchedulerManager.startTimer {
+            fixtureViewModel.getFixtures()
+        }
+        onDispose {
+            TimeSchedulerManager.stopTimer()
+        }
     }
     FixtureScreen(
         navController = navController,
