@@ -58,4 +58,13 @@ class FixtureViewModel @Inject constructor(
             }
         }
     }
+
+    fun searchFixtures(query: String) = viewModelScope.launch {
+        fixtureStateFlow.value.data?.let { fixtures ->
+            val filteredFixtures = fixtures.filter { fixture ->
+                fixture.firstTeam.name.contains(query, ignoreCase = true) ||
+                        fixture.secondTeam.name.contains(query, ignoreCase = true)
+            }
+        }
+    }
 }

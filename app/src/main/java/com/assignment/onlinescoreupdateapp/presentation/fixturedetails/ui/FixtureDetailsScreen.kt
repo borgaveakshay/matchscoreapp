@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +27,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +47,7 @@ import com.assignment.onlinescoreupdateapp.domain.models.fixturedetails.TeamScor
 import com.assignment.onlinescoreupdateapp.presentation.composables.MatchInfoBlock
 import com.assignment.onlinescoreupdateapp.presentation.composables.ScoreBlock
 import com.assignment.onlinescoreupdateapp.presentation.composables.TeamLogo
+import com.assignment.onlinescoreupdateapp.presentation.fixturedetails.states.FixtureDetailsState
 import com.assignment.onlinescoreupdateapp.presentation.fixturedetails.viewmodel.FixtureDetailsViewModel
 import com.example.compose.AppTheme
 
@@ -48,7 +55,7 @@ import com.example.compose.AppTheme
 @Composable
 fun FixtureDetailsScreen(
     navController: NavController,
-    match: FixtureResult,
+    matchState: State<FixtureDetailsState>,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -70,60 +77,87 @@ fun FixtureDetailsScreen(
         ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(innerPadding)
         ) {
-            Text("Fixtures", fontSize = 14.sp, fontWeight = FontWeight.Light)
-            Text(
-                "${match.homeTeam.abbr} vs ${match.awayTeam.abbr}",
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .align(Alignment.CenterHorizontally),
-                fontWeight = FontWeight.Bold
-            )
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
-                    ),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(6.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
+            when {
+                matchState.value.isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        TeamLogo(match.homeTeam)
-                        ScoreBlock(match.fullTimeScore, match.halfTimeScore)
-                        TeamLogo(match.awayTeam)
+                        CircularProgressIndicator()
                     }
+                }
 
-                    Spacer(Modifier.height(12.dp))
+                !matchState.value.error.isNullOrEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = matchState.value.error ?: "Something went wrong",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
 
-                    match.events.groupBy { it.teamAbbr }.forEach { (_, goals) ->
-                        goals.forEach {
-                            Text(
-                                text = "${it.minute}  Goal   ${it.scorerName}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(vertical = 2.dp)
-                            )
+                else -> {
+                    matchState.value.fixtureDetails?.apply {
+                        Text(
+                            "${homeTeam.abbr} vs ${awayTeam.abbr}",
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .align(Alignment.CenterHorizontally),
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 16.dp,
+                                    vertical = 8.dp
+                                ),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = CardDefaults.cardElevation(6.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .padding(16.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    TeamLogo(homeTeam)
+                                    ScoreBlock(fullTimeScore, halfTimeScore)
+                                    TeamLogo(awayTeam)
+                                }
+
+                                Spacer(Modifier.height(12.dp))
+
+                                events.groupBy { it.teamAbbr }.forEach { (_, goals) ->
+                                    goals.forEach {
+                                        Text(
+                                            text = "${it.minute}  Goal   ${it.scorerName}",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.height(12.dp))
+
+                                MatchInfoBlock(this@apply)
+                            }
                         }
                     }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    MatchInfoBlock(match)
                 }
             }
         }
@@ -139,14 +173,14 @@ fun FixtureDetailsParent(
     fixtureDetailsViewModel: FixtureDetailsViewModel = hiltViewModel(),
     fixtureId: Int // We can implement it to fetch particular fixture details
 ) {
-    val fixtureDetails =
-        fixtureDetailsViewModel.fixtureDetailsStateFlow.collectAsStateWithLifecycle()
-    fixtureDetails.value.fixtureDetails?.let {
-        FixtureDetailsScreen(
-            navController = navController,
-            match = it
-        )
+
+    LaunchedEffect(Unit) {
+        fixtureDetailsViewModel.getFixtureDetails(fixtureId)
     }
+    FixtureDetailsScreen(
+        navController = navController,
+        matchState = fixtureDetailsViewModel.fixtureDetailsStateFlow.collectAsStateWithLifecycle()
+    )
 }
 
 
@@ -158,37 +192,45 @@ fun EmployerDetailsScreenPreview() {
         Surface {
             FixtureDetailsScreen(
                 navController = NavController(LocalContext.current),
-                match = FixtureResult(
-                    awayTeam = TeamScore(
-                        name = "Away Team",
-                        abbr = "AT",
-                        logoUrl = "https://example.com/away-logo.png"
-                    ),
-                    homeTeam = TeamScore(
-                        name = "Home Team",
-                        abbr = "HT",
-                        logoUrl = null
-                    ),
-                    fullTimeScore = "2-1",
-                    halfTimeScore = "1-0",
-                    events = listOf(
-                        MatchEvent(
-                            minute = "45",
-                            scorerName = "Scorer Name",
-                            teamAbbr = "HT"
-                        ),
-                        MatchEvent(
-                            minute = "60",
-                            scorerName = "Another Scorer",
-                            teamAbbr = "AT"
+                matchState = remember {
+                    mutableStateOf(
+                        FixtureDetailsState(
+                            fixtureDetails = FixtureResult(
+                                awayTeam = TeamScore(
+                                    name = "Away Team",
+                                    abbr = "AT",
+                                    logoUrl = "https://example.com/away-logo.png"
+                                ),
+                                homeTeam = TeamScore(
+                                    name = "Home Team",
+                                    abbr = "HT",
+                                    logoUrl = null
+                                ),
+                                fullTimeScore = "2-1",
+                                halfTimeScore = "1-0",
+                                events = listOf(
+                                    MatchEvent(
+                                        minute = "45",
+                                        scorerName = "Scorer Name",
+                                        teamAbbr = "HT"
+                                    ),
+                                    MatchEvent(
+                                        minute = "60",
+                                        scorerName = "Another Scorer",
+                                        teamAbbr = "AT"
+                                    )
+                                ),
+                                kickOffTime = "20:00",
+                                matchDate = "2023-08-15",
+                                attendance = "5000",
+                                referee = "Referee Name",
+                                stadium = "Stadium Name"
+                            ),
+                            isLoading = false,
+                            error = null
                         )
-                    ),
-                    kickOffTime = "20:00",
-                    matchDate = "2023-08-15",
-                    attendance = "5000",
-                    referee = "Referee Name",
-                    stadium = "Stadium Name"
-                )
+                    )
+                }
             )
         }
     }

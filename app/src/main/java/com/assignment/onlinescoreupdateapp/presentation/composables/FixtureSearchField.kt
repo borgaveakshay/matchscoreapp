@@ -18,18 +18,17 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.compose.AppTheme
-import kotlinx.coroutines.delay
 
 @Composable
 fun FixtureSearchField(onQueryChanged: (String) -> Unit) {
-    val searchQuery = remember { mutableStateOf<String>("") }
+    val searchQuery = rememberSaveable { mutableStateOf<String>("") }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -49,7 +48,7 @@ fun FixtureSearchField(onQueryChanged: (String) -> Unit) {
             onValueChange = {
                 searchQuery.value = it
             },
-            label = { Text("Search Employers") },
+            label = { Text("Search") },
             modifier = Modifier.fillMaxWidth(),
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = "Search")
@@ -70,7 +69,6 @@ fun FixtureSearchField(onQueryChanged: (String) -> Unit) {
     }
     LaunchedEffect(searchQuery.value) {
         if (searchQuery.value.isNotBlank()) {
-            delay(300)
             onQueryChanged(searchQuery.value)
         }
     }

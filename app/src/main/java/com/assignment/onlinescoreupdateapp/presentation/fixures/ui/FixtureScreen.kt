@@ -18,9 +18,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,7 +44,8 @@ import com.example.compose.AppTheme
 @Composable
 fun FixtureScreen(
     navController: NavController,
-    fixtureState: State<FixtureState>
+    fixtureState: State<FixtureState>,
+    onSearchQueryChanged: (String) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -50,7 +53,7 @@ fun FixtureScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Employer Search",
+                        text = "Fixtures",
                         style = MaterialTheme.typography.headlineSmall
                     )
                 }
@@ -58,11 +61,10 @@ fun FixtureScreen(
         })
     { innerPadding ->
         val fixtureList =
-            remember {
-                mutableStateOf<List<FixtureInfoItem>>(
-                    fixtureState.value.data ?: emptyList()
-                )
+            rememberSaveable {
+                mutableStateOf<List<FixtureInfoItem>?>(null)
             }
+        fixtureList.value = fixtureState.value.data
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -70,16 +72,20 @@ fun FixtureScreen(
                 .padding(10.dp)
         ) {
             FixtureSearchField { searchQuery ->
-                if (searchQuery.isEmpty()) {
-                    fixtureList.value = fixtureState.value.data ?: emptyList()
-                } else {
-                    fixtureList.value = fixtureState.value.data?.filter {
-                        it.firstTeam.name.contains(searchQuery, ignoreCase = true) ||
-                                it.secondTeam.name.contains(searchQuery, ignoreCase = true)
-                    } ?: emptyList()
-                }
+                onSearchQueryChanged(searchQuery)
             }
             Spacer(modifier = Modifier.height(20.dp))
+            if (!fixtureList.value.isNullOrEmpty()) {
+                FixtureList(
+                    fixtureList = fixtureList.value!!
+                ) { fixtureInfo ->
+                    navController.navigate(
+                        FixtureDetailsRoute(
+                            fixtureId = fixtureInfo.id
+                        )
+                    )
+                }
+            }
             fixtureState.value.apply {
                 if (!isError && !isLoading && data != null) {
                     when {
@@ -90,18 +96,6 @@ fun FixtureScreen(
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
-                        }
-
-                        else -> {
-                            FixtureList(
-                                fixtureList = fixtureList.value
-                            ) { fixtureInfo ->
-                                navController.navigate(
-                                    FixtureDetailsRoute(
-                                        fixtureId = fixtureInfo.id
-                                    )
-                                )
-                            }
                         }
                     }
                 } else {
@@ -142,11 +136,16 @@ fun FixtureScreenParent(
     navController: NavController,
     fixtureViewModel: FixtureViewModel = hiltViewModel()
 ) {
-    val fixtureState = fixtureViewModel.fixtureStateFlow.collectAsStateWithLifecycle()
+
+    LaunchedEffect(key1 = Unit) {
+        fixtureViewModel.getFixtures()
+    }
     FixtureScreen(
         navController = navController,
-        fixtureState = fixtureState
-    )
+        fixtureState = fixtureViewModel.fixtureStateFlow.collectAsStateWithLifecycle()
+    ) { searchQuery ->
+
+    }
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
@@ -165,7 +164,8 @@ fun EmployerSearchScreenNightPreview() {
                         )
                     )
                 },
-                navController = rememberNavController()
+                navController = rememberNavController(),
+                onSearchQueryChanged = {}
             )
         }
     }
@@ -220,7 +220,8 @@ fun EmployerSearchScreenPreview() {
                         )
                     )
                 },
-                navController = rememberNavController()
+                navController = rememberNavController(),
+                onSearchQueryChanged = {}
             )
         }
     }

@@ -20,7 +20,7 @@ class FixtureDetailsViewModel @Inject constructor(
     val fixtureDetailsStateFlow: StateFlow<FixtureDetailsState>
         field = MutableStateFlow(FixtureDetailsState())
 
-    fun getFixtureDetails(fixtureId: String) {
+    fun getFixtureDetails(fixtureId: Int) {
         viewModelScope.launch {
             getFixtureDetailsUseCase().collect { response ->
                 when (response) {
