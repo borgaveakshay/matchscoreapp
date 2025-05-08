@@ -1,7 +1,6 @@
 package com.assignment.onlinescoreupdateapp.presentation.common
 
 import java.util.Timer
-import java.util.TimerTask
 import kotlin.concurrent.scheduleAtFixedRate
 
 
