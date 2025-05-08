@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.google.fonts)
     implementation(libs.androidx.compose.navigation)
     implementation(libs.kotlin.serialization)
+    implementation(libs.coil.compose)
     kapt(libs.hilt.compiler)
     testImplementation(libs.hilt.testing)
     kaptTest(libs.hilt.compiler)
@@ -98,4 +99,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(kotlin("test"))
 }

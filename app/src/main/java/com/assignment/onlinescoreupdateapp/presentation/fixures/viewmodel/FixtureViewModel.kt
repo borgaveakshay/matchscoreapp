@@ -26,10 +26,10 @@ class FixtureViewModel @Inject constructor(
                 is ResultResource.Error -> {
                     fixtureStateFlow.update {
                         it.copy(
+                            isLoading = false,
                             isError = true,
-                            errorMessage = response.errorMessage ?: "Something went wrong",
                             data = null,
-                            isLoading = false
+                            errorMessage = response.errorMessage
                         )
                     }
                 }
@@ -48,9 +48,9 @@ class FixtureViewModel @Inject constructor(
                 is ResultResource.Success -> {
                     fixtureStateFlow.update {
                         it.copy(
-                            data = response.data,
                             isLoading = false,
                             isError = false,
+                            data = response.data,
                             errorMessage = null
                         )
                     }
