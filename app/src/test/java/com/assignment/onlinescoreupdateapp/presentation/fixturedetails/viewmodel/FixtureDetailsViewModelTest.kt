@@ -39,7 +39,7 @@ class FixtureDetailsViewModelTest {
             emit(ResultResource.Success(givenFixtureDetailsResponse))
         }
         // When
-        viewModel.getFixtureDetails("123")
+        viewModel.getFixtureDetails(123)
         delay(100)
         // Then
         viewModel.fixtureDetailsStateFlow.value.apply {
@@ -55,7 +55,7 @@ class FixtureDetailsViewModelTest {
             emit(ResultResource.Error(Throwable(givenErrorMessage)))
         }
         // When
-        viewModel.getFixtureDetails("123")
+        viewModel.getFixtureDetails(123)
         delay(100)
         // Then
         viewModel.fixtureDetailsStateFlow.value.apply {
@@ -71,7 +71,7 @@ class FixtureDetailsViewModelTest {
             emit(ResultResource.Loading())
         }
         // When
-        viewModel.getFixtureDetails("123")
+        viewModel.getFixtureDetails(123)
         delay(100)
         // Then
         viewModel.fixtureDetailsStateFlow.value.apply {
