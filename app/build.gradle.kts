@@ -29,6 +29,11 @@ android {
                 "BASE_URL",
                 "\"https://pyates-twocircles.github.io/two-circles-tech-test/\""
             )
+            buildConfigField(
+                "String",
+                "IMAGES_BASE_URL",
+                "\"https://github.com/pyates-twocircles/two-circles-tech-test/blob/main/images/\""
+            )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -40,6 +45,11 @@ android {
                 "String",
                 "BASE_URL",
                 "\"https://pyates-twocircles.github.io/two-circles-tech-test/\""
+            )
+            buildConfigField(
+                "String",
+                "IMAGES_BASE_URL",
+                "\"https://github.com/pyates-twocircles/two-circles-tech-test/blob/main/images/\""
             )
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
